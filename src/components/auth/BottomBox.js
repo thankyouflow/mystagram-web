@@ -2,10 +2,17 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { BaseBox } from "../shared";
+import { useReactiveVar } from "@apollo/client";
+import { darkModeVar } from "../../apollo";
 
 const SBottomBox = styled(BaseBox)`
   padding: 20px 0px;
   text-align: center;
+  span {
+    color: ${(props) => {
+      return props.darkMode ? "white" : "black";
+    }};
+  }
   a {
     font-weight: 600;
     margin-left: 5px;
@@ -14,8 +21,9 @@ const SBottomBox = styled(BaseBox)`
 `;
 
 function BottomBox({ cta, link, linkText }) {
+  const darkMode = useReactiveVar(darkModeVar);
   return (
-    <SBottomBox>
+    <SBottomBox darkMode={darkMode}>
       <span>{cta}</span>
       <Link to={link}>{linkText}</Link>
     </SBottomBox>
@@ -23,6 +31,7 @@ function BottomBox({ cta, link, linkText }) {
 }
 
 BottomBox.propTypes = {
+
   cta: PropTypes.string.isRequired,
   link: PropTypes.string.isRequired,
   linkText: PropTypes.string.isRequired,

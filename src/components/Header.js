@@ -22,7 +22,7 @@ const SHeader = styled.header`
 
 const Wrapper = styled.div`
   max-width: 930px;
-  width: 100%;
+  width: 90%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -32,14 +32,6 @@ const Column = styled.div``;
 
 const Icon = styled.span`
   margin-left: 15px;
-`;
-
-const Btn = styled.span`
-  background-color: ${(props) => props.theme.accent};
-  color: white;
-  border-radius: 4px;
-  padding: 5px 15px;
-  font-weight: 600;
 `;
 
 const Button = styled.span`
@@ -75,7 +67,9 @@ function Header() {
                 <FontAwesomeIcon icon={faCompass} size="lg" />
               </Icon>
               <Icon>
-                <Avatar url={data?.me?.avatar} />
+              <Link to={`/users/${data?.me?.username}`}>
+                  <Avatar url={data?.me?.avatar} />
+                </Link>
               </Icon>
             </IconsContainer>
           ) : (

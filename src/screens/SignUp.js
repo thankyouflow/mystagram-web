@@ -49,7 +49,6 @@ const CREATE_ACCOUNT_MUTATION = gql`
 function SingUp() {
   const history = useHistory();
   const onCompleted = (data) => {
-    debugger
     const { username, password } = getValues();
     const {
       createAccount: { ok },

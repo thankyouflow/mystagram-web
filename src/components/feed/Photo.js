@@ -8,6 +8,7 @@ import {
 import { faHeart as SolidHeart } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import Avatar from "../Avatar";
 import { FatText } from "../shared";
@@ -23,7 +24,7 @@ const TOGGLE_LIKE_MUTATION = gql`
 `;
 
 const PhotoContainer = styled.div`
-  background-color: white;
+  background-color: ${(props) => props.theme.bgColor};
   border-radius: 4px;
   border: 1px solid ${(props) => props.theme.borderColor};
   margin-bottom: 60px;
@@ -38,7 +39,6 @@ const PhotoHeader = styled.div`
 
 const Username = styled(FatText)`
   margin-left: 15px;
-  color: black;
 `;
 
 const PhotoFile = styled.img`
@@ -61,17 +61,16 @@ const PhotoActions = styled.div`
   svg {
     font-size: 20px;
   }
-  color: black;
 `;
 
 const PhotoAction = styled.div`
   margin-right: 10px;
+  cursor: pointer;
 `;
 
 const Likes = styled(FatText)`
   margin-top: 15px;
   display: block;
-  color: black;
 `;
 
 function Photo({
@@ -83,92 +82,91 @@ function Photo({
     caption,
     commentNumber,
     comments,
-}) {
+  }) {
     const updateToggleLike = (cache, result) => {
-        const {
-            data: {
-                toggleLike: { ok },
+      const {
+        data: {
+          toggleLike: { ok },
+        },
+      } = result;
+      if (ok) {
+        const photoId = `Photo:${id}`;
+        cache.modify({
+          id: photoId,
+          fields: {
+            isLiked(prev) {
+              return !prev;
             },
-        } = result;
-        if (ok) {
-            const fragmentId = `Photo:${id}`;
-            const fragment = gql`
-              fragment BSName on Photo {
-                isLiked
-                likes
+            likes(prev) {
+              if (isLiked) {
+                return prev - 1;
               }
-            `;
-            const result = cache.readFragment({
-                id: fragmentId,
-                fragment,
-            });
-            if ("isLiked" in result && "likes" in result) {
-                const { isLiked: cacheIsLiked, likes: cacheLikes } = result;
-                cache.writeFragment({
-                    id: fragmentId,
-                    fragment,
-                    data: {
-                        isLiked: !cacheIsLiked,
-                        likes: cacheIsLiked ? cacheLikes - 1 : cacheLikes + 1,
-                    },
-                });
-            }
-        }
+              return prev + 1;
+            },
+          },
+        });
+      }
     };
     const [toggleLikeMutation] = useMutation(TOGGLE_LIKE_MUTATION, {
-        variables: {
-            id,
-        },
-        update: updateToggleLike,
+      variables: {
+        id,
+      },
+      update: updateToggleLike,
     });
     return (
-        <PhotoContainer key={id}>
-            <PhotoHeader>
-                <Avatar lg url={user.avatar} />
-                <Username>{user.username}</Username>
-            </PhotoHeader>
-            <PhotoFile src={file} />
-            <PhotoData>
-                <PhotoActions>
-                    <div>
-                        <PhotoAction onClick={toggleLikeMutation}>
-                            <FontAwesomeIcon
-                                style={{ color: isLiked ? "tomato" : "inherit" }}
-                                icon={isLiked ? SolidHeart : faHeart}
-                            />
-                        </PhotoAction>
-                        <PhotoAction>
-                            <FontAwesomeIcon icon={faComment} />
-                        </PhotoAction>
-                        <PhotoAction>
-                            <FontAwesomeIcon icon={faPaperPlane} />
-                        </PhotoAction>
-                    </div>
-                    <div>
-                        <FontAwesomeIcon icon={faBookmark} />
-                    </div>
-                </PhotoActions>
-                <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
-                <Comments
-                    author={user.username}
-                    caption={caption}
-                    commentNumber={commentNumber}
-                    comments={comments}
+      <PhotoContainer key={id}>
+        <PhotoHeader>
+        <Link to={`/users/${user.username}`}>
+          <Avatar lg url={user.avatar} />
+        </Link>
+        <Link to={`/users/${user.username}`}>
+          <Username>{user.username}</Username>
+        </Link>
+        </PhotoHeader>
+        <PhotoFile src={file} />
+        <PhotoData>
+          <PhotoActions>
+            <div>
+              <PhotoAction onClick={toggleLikeMutation}>
+                <FontAwesomeIcon
+                  style={{ color: isLiked ? "tomato" : "inherit" }}
+                  icon={isLiked ? SolidHeart : faHeart}
                 />
-            </PhotoData>
-        </PhotoContainer>
+              </PhotoAction>
+              <PhotoAction>
+                <FontAwesomeIcon icon={faComment} />
+              </PhotoAction>
+              <PhotoAction>
+                <FontAwesomeIcon icon={faPaperPlane} />
+              </PhotoAction>
+            </div>
+            <div>
+              <FontAwesomeIcon icon={faBookmark} />
+            </div>
+          </PhotoActions>
+          <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
+          <Comments
+            author={user.username}
+            caption={caption}
+            commentNumber={commentNumber}
+            comments={comments}
+            photoId={id}
+          />
+        </PhotoData>
+      </PhotoContainer>
     );
-}
-
-Photo.propTypes = {
+  }
+  
+  Photo.propTypes = {
     id: PropTypes.number.isRequired,
     user: PropTypes.shape({
-        avatar: PropTypes.string,
-        username: PropTypes.string.isRequired,
+      avatar: PropTypes.string,
+      username: PropTypes.string.isRequired,
     }),
+    caption: PropTypes.string,
     file: PropTypes.string.isRequired,
     isLiked: PropTypes.bool.isRequired,
     likes: PropTypes.number.isRequired,
     commentNumber: PropTypes.number.isRequired,
-};
-export default Photo;
+  };
+  export default Photo;
